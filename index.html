@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ParaDice — Магазин и Клуб Настольных Игр</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифт Nunito -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Иконки Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-main: #FDF6E4;
+            --bg-card: #FFFFFF;
+            --bg-card-soft: #F6ECD4;
+            --text-main: #023E43;
+            --text-muted: #3A676A;
+            --accent: #00A19D;
+            --accent-dark: #023E43;
+            --gold: #F5A600;
+            --gold-soft: #FFF4D4;
+            --border-color: rgba(2, 62, 67, 0.14);
+            --card-radius: 20px;
+            --btn-radius: 14px;
+            --shadow-card: 0 8px 24px -6px rgba(2, 62, 67, 0.10);
+        }
+
+        html.dark-theme {
+            --bg-main: #071E22;
+            --bg-card: #0D2B30;
+            --bg-card-soft: #133940;
+            --text-main: #F8F3E6;
+            --text-muted: #98BFC2;
+            --accent: #14B8B3;
+            --accent-dark: #062226;
+            --gold: #F5A600;
+            --gold-soft: rgba(245, 166, 0, 0.16);
+            --border-color: rgba(152, 191, 194, 0.18);
+            --shadow-card: 0 10px 28px -6px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        /* Фирменный фоновый узор граней D20 */
+        .bg-d20-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2300A19D' stroke-opacity='0.11' stroke-width='1.5'%3E%3Cpolygon points='70,12 118,40 118,96 70,124 22,96 22,40'/%3E%3Cpolygon points='70,32 100,82 40,82'/%3E%3Cline x1='70' y1='12' x2='70' y2='32'/%3E%3Cline x1='118' y1='40' x2='70' y2='32'/%3E%3Cline x1='22' y1='40' x2='70' y2='32'/%3E%3Cline x1='118' y1='40' x2='100' y2='82'/%3E%3Cline x1='118' y1='96' x2='100' y2='82'/%3E%3Cline x1='70' y1='124' x2='100' y2='82'/%3E%3Cline x1='70' y1='124' x2='40' y2='82'/%3E%3Cline x1='22' y1='96' x2='40' y2='82'/%3E%3Cline x1='22' y1='40' x2='40' y2='82'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 140px 140px;
+        }
+
+        .bg-dots-pattern {
+            background-image: radial-gradient(rgba(0, 161, 157, 0.16) 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+        }
+
+        .bg-clean-pattern {
+            background-image: none;
+        }
+
+        .pd-card {
+            background-color: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--shadow-card);
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.25s ease;
+        }
+
+        .pd-card-soft {
+            background-color: var(--bg-card-soft);
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--card-radius) - 4px);
+        }
+
+        .pd-btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #008582 100%);
+            color: #FFFFFF;
+            border-radius: var(--btn-radius);
+            font-weight: 800;
+            box-shadow: 0 4px 14px rgba(0, 161, 157, 0.30);
+            transition: transform 0.12s ease, opacity 0.15s ease;
+        }
+
+        .pd-btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        .pd-btn-gold {
+            background: linear-gradient(135deg, #FFB81C 0%, #F5A600 100%);
+            color: #023E43;
+            border-radius: var(--btn-radius);
+            font-weight: 900;
+            box-shadow: 0 4px 14px rgba(245, 166, 0, 0.32);
+            transition: transform 0.12s ease;
+        }
+
+        .pd-btn-gold:active {
+            transform: scale(0.97);
+        }
+
+        .pd-btn-outline {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            font-weight: 700;
+            transition: transform 0.12s ease, background-color 0.15s ease;
+        }
+
+        .pd-btn-outline:active {
+            transform: scale(0.97);
+        }
+
+        .pd-input {
+            width: 100%;
+            background-color: var(--bg-card-soft);
+            color: var(--text-main);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 14px;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .pd-input:focus {
+            border-color: var(--accent);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.18); opacity: 0.75; }
+        }
+        .sync-dot-active {
+            animation: pulseGlow 2.2s infinite ease-in-out;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-animate {
+            animation: modalPop 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-d20-pattern pb-28 select-none">
+
+    <!-- Верхняя шапка приложения -->
+    <header class="sticky top-0 z-30 backdrop-blur-md border-b" style="background-color: color-mix(in srgb, var(--bg-main) 88%, transparent); border-color: var(--border-color);">
+        <div class="max-w-xl mx-auto px-4 py-2.5 flex items-center justify-between gap-2">
+            <!-- Логотип и название клуба -->
+            <button onclick="handleLogoClick()" class="flex items-center gap-2.5 text-left min-w-0 group">
+                <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+                    <!-- Векторный логотип ParaDice (D20 с нимбом и облаками) -->
+                    <svg viewBox="0 0 120 110" class="w-11 h-11 drop-shadow-sm">
+                        <!-- Облако -->
+                        <path d="M18,86 C10,86 6,80 9,73 C11,67 18,65 23,67 C26,58 37,55 45,60 C52,51 68,51 75,60 C83,55 94,58 97,67 C102,65 109,67 111,73 C114,80 110,86 102,86 Z" fill="#63C7C2" opacity="0.85"/>
+                        <!-- Нимб -->
+                        <ellipse cx="60" cy="14" rx="22" ry="6" fill="none" stroke="#F5A600" stroke-width="4.5"/>
+                        <!-- D20 -->
+                        <polygon points="60,21 93,40 93,78 60,97 27,78 27,40" fill="#00A19D" stroke="#023E43" stroke-width="3.5" stroke-linejoin="round"/>
+                        <polygon points="60,36 80,71 40,71" fill="#008E8A" stroke="#023E43" stroke-width="2.5" stroke-linejoin="round"/>
+                        <line x1="60" y1="21" x2="60" y2="36" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="93" y1="40" x2="60" y2="36" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="27" y1="40" x2="60" y2="36" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="93" y1="40" x2="80" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="93" y1="78" x2="80" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="60" y1="97" x2="80" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="60" y1="97" x2="40" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="27" y1="78" x2="40" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <line x1="27" y1="40" x2="40" y2="71" stroke="#023E43" stroke-width="2.5"/>
+                        <!-- Монограмма PD -->
+                        <text x="60" y="65" text-anchor="middle" fill="#F5A600" font-family="Nunito, sans-serif" font-weight="900" font-size="17" letter-spacing="-0.5">PD</text>
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <h1 id="headerClubName" class="text-lg font-black tracking-tight leading-none truncate">ParaDice</h1>
+                        <span id="cloudStatusDot" title="Статус синхронизации" class="w-2 h-2 rounded-full bg-emerald-500 sync-dot-active shrink-0"></span>
+                    </div>
+                    <p id="headerClubSubtitle" class="text-[11px] font-extrabold uppercase tracking-wider truncate mt-0.5" style="color: var(--gold);">Магазин и Клуб Настольных Игр</p>
+                </div>
+            </button>
+
+            <!-- Кнопки управления в шапке -->
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- Кнопка темы -->
+                <button onclick="openThemeModal()" title="Оформление" class="w-9 h-9 rounded-xl flex items-center justify-center border transition active:scale-95" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                    <i data-lucide="palette" class="w-4 h-4" style="color: var(--accent);"></i>
+                </button>
+
+                <!-- Кнопка настроек (только для Админа) -->
+                <button id="adminSettingsBtn" onclick="openClubSettingsModal('general')" title="Настройки клуба" class="hidden w-9 h-9 rounded-xl items-center justify-center border transition active:scale-95" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4" style="color: var(--gold);"></i>
+                </button>
+
+                <!-- Кнопка входа/выхода Админа -->
+                <button id="roleToggleBtn" onclick="handleRoleToggle()" class="px-2.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1 border transition active:scale-95" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                    <i id="roleToggleIcon" data-lucide="lock" class="w-3.5 h-3.5" style="color: var(--accent);"></i>
+                    <span id="roleToggleText">Админ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контейнер контента -->
+    <main id="appContent" class="max-w-xl mx-auto px-4 pt-4 space-y-4">
+        <!-- Динамический рендер активной вкладки -->
+    </main>
+
+    <!-- Нижняя навигационная панель -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 border-t backdrop-blur-lg" style="background-color: color-mix(in srgb, var(--bg-card) 94%, transparent); border-color: var(--border-color);">
+        <div class="max-w-xl mx-auto px-2 py-1.5 grid grid-cols-4 gap-1">
+            <button onclick="switchTab('events')" id="nav-events" class="nav-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition">
+                <i data-lucide="calendar-days" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[11px] font-extrabold">Игротеки</span>
+            </button>
+            <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition">
+                <i data-lucide="dices" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[11px] font-extrabold">Игры зала</span>
+            </button>
+            <button onclick="switchTab('shop')" id="nav-shop" class="nav-btn relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition">
+                <i data-lucide="shopping-bag" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[11px] font-extrabold">Магазин</span>
+                <span id="cartNavBadge" class="hidden absolute top-1 right-4 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center" style="background-color: var(--gold); color: #023E43;">0</span>
+            </button>
+            <button onclick="switchTab('cabinet')" id="nav-cabinet" class="nav-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition">
+                <i data-lucide="user-round-check" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[11px] font-extrabold">Кабинет</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Контейнер модальных окон -->
+    <div id="modalBackdrop" onclick="closeModalOnBackdrop(event)" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div id="modalContainer" class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 modal-animate border" style="background-color: var(--bg-card); border-color: var(--border-color); color: var(--text-main);">
+            <!-- Контент модального окна -->
+        </div>
+    </div>
+
+    <!-- Всплывающие уведомления (Toast) -->
+    <div id="toastContainer" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md pointer-events-none flex flex-col items-center gap-2"></div>
+
+    <!-- Логика приложения и Firebase Firestore Live Sync -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. ИНИЦИАЛИЗАЦИЯ TELEGRAM И ПОЛЬЗОВАТЕЛЯ
+        // ==========================================
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            try {
+                tg.ready();
+                tg.expand();
+            } catch (e) {}
+        }
+
+        function resolveTelegramUser() {
+            const u = tg?.initDataUnsafe?.user;
+            if (u && u.id) {
+                const fullName = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Игрок клуба';
+                return {
+                    id: String(u.id),
+                    name: fullName,
+                    username: u.username ? `@${u.username}` : '',
+                    initials: fullName.slice(0, 2).toUpperCase()
+                };
+            }
+            let localGuestId = localStorage.getItem('pd_guest_id');
+            if (!localGuestId) {
+                localGuestId = 'guest_' + Math.floor(100000 + Math.random() * 900000);
+                localStorage.setItem('pd_guest_id', localGuestId);
+            }
+            return {
+                id: localGuestId,
+                name: 'Гость клуба',
+                username: '@player',
+                initials: 'ГК'
+            };
+        }
+
+        const currentUser = resolveTelegramUser();
+
+        // ==========================================
+        // 2. УТИЛИТЫ И НАЧАЛЬНЫЕ ДАННЫЕ
+        // ==========================================
+        function formatKZT(amount) {
+            const num = Math.max(0, Math.round(Number(amount) || 0));
+            if (num === 0) return '0 ₸';
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ₸';
+        }
+
+        function generateCoverSvg(title, emoji = '🎲', bg1 = '#00A19D', bg2 = '#023E43') {
+            const safeTitle = String(title || 'Игра').slice(0, 26).replace(/[<>&"']/g, '');
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="320" viewBox="0 0 600 320">
+                <defs>
+                    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="${bg1}"/>
+                        <stop offset="100%" stop-color="${bg2}"/>
+                    </linearGradient>
+                </defs>
+                <rect width="600" height="320" fill="url(#g)"/>
+                <circle cx="520" cy="60" r="95" fill="#F5A600" fill-opacity="0.16"/>
+                <circle cx="85" cy="270" r="110" fill="#FFFFFF" fill-opacity="0.07"/>
+                <text x="50%" y="44%" dominant-baseline="middle" text-anchor="middle" font-size="76">${emoji}</text>
+                <text x="50%" y="76%" dominant-baseline="middle" text-anchor="middle" fill="#FDF6E4" font-family="sans-serif" font-weight="800" font-size="28">${safeTitle}</text>
+            </svg>`;
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+        }
+
+        function simpleHash(str) {
+            let h = 2166136261;
+            for (let i = 0; i < str.length; i++) {
+                h ^= str.charCodeAt(i);
+                h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+            }
+            return (h >>> 0).toString(16);
+        }
+
+        function createDefaultSharedState() {
+            return {
+                club: {
+                    name: 'ParaDice',
+                    subtitle: 'Магазин и Клуб Настольных Игр',
+                    address: 'Павлодар, центр настольных игр ParaDice'
+                },
+                bonusRules: {
+                    welcomeBonus: 500,
+                    welcomeStamps: 0,
+                    cashbackPercent: 10,
+                    allowBonusPay: true,
+                    maxBonusPayPercent: 30,
+                    stampsEnabled: true,
+                    freeGameEvery: 9 // Каждая 9-я игротека бесплатная!
+                },
+                adminAuth: {
+                    login: 'admin',
+                    passHash: simpleHash('paradice')
+                },
+                telegramNotify: {
+                    botToken: '',
+                    adminChatId: '',
+                    enabled: true
+                },
+                events: [
+                    {
+                        id: 'ev_1',
+                        title: 'Вечерняя Дюна: Империя + Восстание',
+                        date: 'Пятница, 19:00',
+                        game: 'Дюна: Империя',
+                        master: 'Мастер Артём',
+                        price: 2000,
+                        maxSeats: 4,
+                        description: 'Глубокая евро-стратегия с колодостроем и интригами Великих Домов. Правила объясним за 15 минут перед стартом.'
+                    },
+                    {
+                        id: 'ev_2',
+                        title: 'Субботний Бункер: Выживание',
+                        date: 'Суббота, 18:30',
+                        game: 'Бункер 3.0',
+                        master: 'Ведущая Алина',
+                        price: 1500,
+                        maxSeats: 10,
+                        description: 'Дискуссионная игра на убеждение и логику. Отлично подходит для новичков и больших компаний.'
+                    },
+                    {
+                        id: 'ev_3',
+                        title: 'Открытая игротека выходного дня',
+                        date: 'Воскресенье, 15:00',
+                        game: 'Любые игры из зала',
+                        master: 'Команда ParaDice',
+                        price: 1800,
+                        maxSeats: 16,
+                        description: 'Свободный доступ ко всей коллекции настольных игр клуба, подбор компании и помощь гейм-мастеров.'
+                    }
+                ],
+                catalog: [
+                    {
+                        id: 'cat_1',
+                        title: 'Дюна: Империя',
+                        emoji: '🏜️',
+                        players: '1–4',
+                        time: '60–120 мин',
+                        age: '13+',
+                        genre: 'Стратегия',
+                        complexity: 'Средняя',
+                        image: generateCoverSvg('Дюна: Империя', '🏜️', '#B45309', '#023E43'),
+                        description: 'Сочетание колодостроительной механики и размещения рабочих во вселенной Арракиса.'
+                    },
+                    {
+                        id: 'cat_2',
+                        title: 'Колонизаторы (Catan)',
+                        emoji: '🏝️',
+                        players: '3–4',
+                        time: '60–90 мин',
+                        age: '10+',
+                        genre: 'Семейная',
+                        complexity: 'Лёгкая',
+                        image: generateCoverSvg('Колонизаторы', '🏝️', '#00A19D', '#065F46'),
+                        description: 'Легендарная игра о торговле ресурсами, строительстве дорог и поселений на острове Катан.'
+                    },
+                    {
+                        id: 'cat_3',
+                        title: 'Бункер',
+                        emoji: '☢️',
+                        players: '4–16',
+                        time: '30–60 мин',
+                        age: '16+',
+                        genre: 'Вечеринка',
+                        complexity: 'Лёгкая',
+                        image: generateCoverSvg('Бункер', '☢️', '#0F766E', '#1E293B'),
+                        description: 'Разговорная игра на аргументацию: убедите остальных, что именно ваши навыки спасут убежище.'
+                    },
+                    {
+                        id: 'cat_4',
+                        title: 'Корни (Root)',
+                        emoji: '🦊',
+                        players: '2–4',
+                        time: '60–90 мин',
+                        age: '10+',
+                        genre: 'Асимметрия',
+                        complexity: 'Высокая',
+                        image: generateCoverSvg('Корни (Root)', '🦊', '#15803D', '#023E43'),
+                        description: 'Асимметричная лесная стратегия, где каждая фракция играет по собственным уникальным правилам.'
+                    },
+                    {
+                        id: 'cat_5',
+                        title: 'Ужас Аркхэма (Карточная)',
+                        emoji: '🐙',
+                        players: '1–4',
+                        time: '90–120 мин',
+                        age: '14+',
+                        genre: 'Кооператив',
+                        complexity: 'Высокая',
+                        image: generateCoverSvg('Ужас Аркхэма', '🐙', '#1E3A8A', '#023E43'),
+                        description: 'Сюжетное кооперативное расследование мистических тайн по мифам Г. Ф. Лавкрафта.'
+                    }
+                ],
+                shop: [
+                    {
+                        id: 'shop_1',
+                        title: 'Билет на поезд: Европа',
+                        emoji: '🚂',
+                        price: 24900,
+                        oldPrice: 28500,
+                        stock: 4,
+                        players: '2–5',
+                        badge: 'Хит продаж',
+                        image: generateCoverSvg('Билет на поезд: Европа', '🚂', '#0284C7', '#023E43'),
+                        description: 'Новая запечатанная коробка в плёнке. Русское издание. Идеальный подарок и семейный хит.'
+                    },
+                    {
+                        id: 'shop_2',
+                        title: 'Крылья (Wingspan)',
+                        emoji: '🦉',
+                        price: 29500,
+                        oldPrice: 0,
+                        stock: 2,
+                        players: '1–5',
+                        badge: 'Новая в плёнке',
+                        image: generateCoverSvg('Крылья (Wingspan)', '🦉', '#00A19D', '#064E3B'),
+                        description: 'Красочная стратегия о заповедниках птиц с деревянными кубиками-кормушками и яйцами.'
+                    },
+                    {
+                        id: 'shop_3',
+                        title: 'Взрывные котята (18+)',
+                        emoji: '💣',
+                        price: 9900,
+                        oldPrice: 11500,
+                        stock: 7,
+                        players: '2–5',
+                        badge: 'Быстрый патигейм',
+                        image: generateCoverSvg('Взрывные котята', '💣', '#D97706', '#023E43'),
+                        description: 'Безумная карточная русская рулетка с котиками. Запечатанная новая колода.'
+                    },
+                    {
+                        id: 'shop_4',
+                        title: '7 Чудес: Дуэль',
+                        emoji: '🏛️',
+                        price: 16800,
+                        oldPrice: 0,
+                        stock: 1,
+                        players: '2',
+                        badge: 'Последняя коробка!',
+                        image: generateCoverSvg('7 Чудес: Дуэль', '🏛️', '#B45309', '#023E43'),
+                        description: 'Лучшая дуэльная цивилизационная игра для двоих игроков. Новая коробка в плёнке.'
+                    }
+                ]
+            };
+        }
+
+        function createDefaultUserProfile() {
+            return {
+                userId: currentUser.id,
+                name: currentUser.name,
+                username: currentUser.username,
+                hasCard: false,
+                cardNumber: '',
+                balance: 0,
+                stamps: 0,
+                freeGamesAvailable: 0,
+                history: [],
+                orders: []
+            };
+        }
+
+        // ==========================================
+        // 3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ И CLOUD SYNC
+        // ==========================================
+        const LOCAL_SHARED_KEY = 'paradice_shared_v3';
+        const LOCAL_USER_KEY = `paradice_user_${currentUser.id}_v3`;
+        const LOCAL_BOOKINGS_KEY = 'paradice_bookings_v3';
+        const LOCAL_LOGS_KEY = 'paradice_logs_v3';
+        const LOCAL_THEME_KEY = 'paradice_theme_v3';
+
+        let sharedState = loadLocalJson(LOCAL_SHARED_KEY, createDefaultSharedState());
+        let userProfile = loadLocalJson(LOCAL_USER_KEY, createDefaultUserProfile());
+        let allBookings = loadLocalJson(LOCAL_BOOKINGS_KEY, []);
+        let adminLogs = loadLocalJson(LOCAL_LOGS_KEY, []);
+        let themePrefs = loadLocalJson(LOCAL_THEME_KEY, {
+            mode: 'light',
+            accent: '#00A19D',
+            pattern: 'bg-d20-pattern',
+            radius: '20px'
+        });
+
+        let activeTab = 'events';
+        let eventsFilter = 'all';
+        let catalogSearch = '';
+        let catalogGenre = 'Все';
+        let shopSearch = '';
+        let shopSort = 'default';
+        let cart = [];
+        let isAdminMode = false;
+        let adminFailCount = 0;
+        let adminLockUntil = 0;
+
+        function loadLocalJson(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                return Object.assign({}, fallback, JSON.parse(raw));
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function saveLocalJson(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        // Подключение Firestore (если доступно окружение)
+        let db = null;
+        let auth = null;
+        let appId = 'paradice-club-app';
+        let isCloudReady = false;
+
+        async function initCloudSync() {
+            const dot = document.getElementById('cloudStatusDot');
+            try {
+                if (typeof __firebase_config === 'undefined') {
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
+                    return;
+                }
+                const firebaseConfig = JSON.parse(__firebase_config);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'paradice-club-app';
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                isCloudReady = true;
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 sync-dot-active shrink-0';
+
+                // 1. Слушаем общие настройки клуба, анонсы, каталог и витрину
+                const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'club_state', 'main');
+                onSnapshot(sharedDocRef, (snap) => {
+                    if (snap.exists()) {
+                        const remote = snap.data();
+                        sharedState = Object.assign(createDefaultSharedState(), remote);
+                        saveLocalJson(LOCAL_SHARED_KEY, sharedState);
+                        renderHeader();
+                        renderActiveTab();
+                    } else {
+                        setDoc(sharedDocRef, sharedState).catch(() => {});
+                    }
+                }, () => {});
+
+                // 2. Слушаем все записи за столы в реальном времени
+                const bookingsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+                onSnapshot(bookingsColRef, (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    allBookings = list;
+                    saveLocalJson(LOCAL_BOOKINGS_KEY, allBookings);
+                    renderActiveTab();
+                }, () => {});
+
+                // 3. Слушаем журнал записей для админа
+                const logsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'admin_logs');
+                onSnapshot(logsColRef, (snap) => {
+                    const list = [];
+                    snap.forEach(d => list.push(d.data()));
+                    list.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    adminLogs = list.slice(0, 40);
+                    saveLocalJson(LOCAL_LOGS_KEY, adminLogs);
+                    if (activeTab === 'cabinet' && isAdminMode) renderActiveTab();
+                }, () => {});
+
+                // 4. Слушаем личный кабинет текущего пользователя
+                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', currentUser.id);
+                onSnapshot(userDocRef, (snap) => {
+                    if (snap.exists()) {
+                        userProfile = Object.assign(createDefaultUserProfile(), snap.data());
+                        saveLocalJson(LOCAL_USER_KEY, userProfile);
+                        if (activeTab === 'cabinet') renderActiveTab();
+                    } else {
+                        setDoc(userDocRef, userProfile).catch(() => {});
+                    }
+                }, () => {});
+
+            } catch (err) {
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
+            }
+        }
+
+        async function persistSharedState() {
+            saveLocalJson(LOCAL_SHARED_KEY, sharedState);
+            renderHeader();
+            renderActiveTab();
+            if (isCloudReady && db && auth?.currentUser) {
+                try {
+                    const sharedDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'club_state', 'main');
+                    await setDoc(sharedDocRef, sharedState);
+                } catch (e) {}
+            }
+        }
+
+        async function persistUserProfile() {
+            saveLocalJson(LOCAL_USER_KEY, userProfile);
+            if (activeTab === 'cabinet') renderActiveTab();
+            if (isCloudReady && db && auth?.currentUser) {
+                try {
+                    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', currentUser.id);
+                    await setDoc(userDocRef, userProfile);
+                } catch (e) {}
+            }
+        }
+
+        async function saveBookingRecord(booking) {
+            const idx = allBookings.findIndex(b => b.id === booking.id);
+            if (idx >= 0) allBookings[idx] = booking;
+            else allBookings.push(booking);
+            saveLocalJson(LOCAL_BOOKINGS_KEY, allBookings);
+            renderActiveTab();
+
+            if (isCloudReady && db && auth?.currentUser) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', booking.id), booking);
+                } catch (e) {}
+            }
+        }
+
+        async function deleteBookingRecord(bookingId) {
+            allBookings = allBookings.filter(b => b.id !== bookingId);
+            saveLocalJson(LOCAL_BOOKINGS_KEY, allBookings);
+            renderActiveTab();
+
+            if (isCloudReady && db && auth?.currentUser) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId));
+                } catch (e) {}
+            }
+        }
+
+        // Отправка уведомления админу в Telegram и запись в журнал
+        async function notifyAdmin(title, text) {
+            const logEntry = {
+                id: 'log_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+                title,
+                text,
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }),
+                timestamp: Date.now()
+            };
+            adminLogs.unshift(logEntry);
+            adminLogs = adminLogs.slice(0, 40);
+            saveLocalJson(LOCAL_LOGS_KEY, adminLogs);
+
+            if (isCloudReady && db && auth?.currentUser) {
+                setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admin_logs', logEntry.id), logEntry).catch(() => {});
+            }
+
+            const cfg = sharedState.telegramNotify || {};
+            if (cfg.enabled && cfg.botToken && cfg.adminChatId) {
+                const message = `🎲 *${sharedState.club.name} — ${title}*\n\n${text}`;
+                fetch(`https://api.telegram.org/bot${cfg.botToken.trim()}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: cfg.adminChatId.trim(),
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                }).catch(() => {});
+            }
+        }
+
+        // ==========================================
+        // 4. ПРИМЕНЕНИЕ ТЕМЫ И ШАПКИ
+        // ==========================================
+        function applyTheme() {
+            const root = document.documentElement;
+            if (themePrefs.mode === 'dark') {
+                root.classList.add('dark-theme');
+            } else {
+                root.classList.remove('dark-theme');
+            }
+            root.style.setProperty('--accent', themePrefs.accent || '#00A19D');
+            root.style.setProperty('--card-radius', themePrefs.radius || '20px');
+
+            document.body.classList.remove('bg-d20-pattern', 'bg-dots-pattern', 'bg-clean-pattern');
+            document.body.classList.add(themePrefs.pattern || 'bg-d20-pattern');
+
+            if (tg) {
+                try {
+                    const bg = themePrefs.mode === 'dark' ? '#071E22' : '#FDF6E4';
+                    tg.setHeaderColor(bg);
+                    tg.setBackgroundColor(bg);
+                } catch (e) {}
+            }
+        }
+
+        function renderHeader() {
+            document.getElementById('headerClubName').textContent = sharedState.club.name || 'ParaDice';
+            document.getElementById('headerClubSubtitle').textContent = sharedState.club.subtitle || 'Магазин и Клуб Настольных Игр';
+
+            const settingsBtn = document.getElementById('adminSettingsBtn');
+            const roleText = document.getElementById('roleToggleText');
+            const roleIcon = document.getElementById('roleToggleIcon');
+            const roleBtn = document.getElementById('roleToggleBtn');
+
+            if (isAdminMode) {
+                settingsBtn.classList.remove('hidden');
+                settingsBtn.classList.add('flex');
+                roleText.textContent = 'Выйти';
+                roleIcon.setAttribute('data-lucide', 'shield-check');
+                roleBtn.style.backgroundColor = 'var(--gold)';
+                roleBtn.style.color = '#023E43';
+            } else {
+                settingsBtn.classList.add('hidden');
+                settingsBtn.classList.remove('flex');
+                roleText.textContent = 'Админ';
+                roleIcon.setAttribute('data-lucide', 'lock');
+                roleBtn.style.backgroundColor = 'var(--bg-card)';
+                roleBtn.style.color = 'var(--text-main)';
+            }
+            lucide.createIcons();
+        }
+
+        function updateNavigation() {
+            ['events', 'catalog', 'shop', 'cabinet'].forEach(tab => {
+                const btn = document.getElementById(`nav-${tab}`);
+                if (!btn) return;
+                if (tab === activeTab) {
+                    btn.style.backgroundColor = 'var(--accent)';
+                    btn.style.color = '#FFFFFF';
+                } else {
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = 'var(--text-muted)';
+                }
+            });
+
+            const badge = document.getElementById('cartNavBadge');
+            const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+            if (totalQty > 0) {
+                badge.textContent = totalQty;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = 'px-4 py-2.5 rounded-2xl text-xs font-extrabold shadow-lg border flex items-center gap-2 modal-animate';
+            el.style.backgroundColor = type === 'error' ? '#FEE2E2' : 'var(--bg-card)';
+            el.style.color = type === 'error' ? '#991B1B' : 'var(--text-main)';
+            el.style.borderColor = type === 'error' ? '#FCA5A5' : 'var(--accent)';
+            el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✨'}</span><span>${msg}</span>`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 2800);
+        }
+
+        // ==========================================
+        // 5. ВКЛАДКА 1: ИГРОТЕКИ И ЗАПИСЬ
+        // ==========================================
+        function renderEventsTab() {
+            const myBookings = allBookings.filter(b => b.userId === currentUser.id);
+            const list = eventsFilter === 'my'
+                ? sharedState.events.filter(ev => myBookings.some(b => b.eventId === ev.id))
+                : sharedState.events;
+
+            let html = `
+                <div class="pd-card p-4 flex items-center justify-between gap-3" style="background: linear-gradient(135deg, var(--accent) 0%, #023E43 100%); color: #FFFFFF;">
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-1" style="background-color: var(--gold); color: #023E43;">Расписание стола</span>
+                        <h2 class="text-lg font-black leading-tight">Анонсы игротек</h2>
+                        <p class="text-xs opacity-90 mt-0.5">Каждая ${sharedState.bonusRules.freeGameEvery}-я игротека по карте — бесплатно (0 ₸)</p>
+                    </div>
+                    <div class="text-3xl">🎲</div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex p-1 rounded-2xl border flex-1" style="background-color: var(--bg-card); border-color: var(--border-color);">
+                        <button onclick="setEventsFilter('all')" class="flex-1 py-2 rounded-xl text-xs font-extrabold transition" style="${eventsFilter === 'all' ? 'background-color: var(--accent); color: #FFF;' : 'color: var(--text-muted);'}">
+                            Все анонсы (${sharedState.events.length})
+                        </button>
+                        <button onclick="setEventsFilter('my')" class="flex-1 py-2 rounded-xl text-xs font-extrabold transition" style="${eventsFilter === 'my' ? 'background-color: var(--accent); color: #FFF;' : 'color: var(--text-muted);'}">
+                            Мои записи (${myBookings.length})
+                        </button>
+                    </div>
+                    ${isAdminMode ? `
+                        <button onclick="openEventModal()" class="pd-btn-gold px-3.5 py-2.5 text-xs flex items-center gap-1 shrink-0">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Анонс
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            if (list.length === 0) {
+                html += `
+                    <div class="pd-card p-8 text-center space-y-2">
+                        <div class="text-4xl">🗓️</div>
+                        <p class="font-extrabold text-sm">${eventsFilter === 'my' ? 'У вас пока нет активных записей' : 'Анонсы скоро появятся'}</p>
+                        <p class="text-xs" style="color: var(--text-muted);">Выберите подходящий стол в общем расписании и забронируйте место</p>
+                    </div>
+                `;
+                return html;
+            }
+
+            list.forEach(ev => {
+                const evBookings = allBookings.filter(b => b.eventId === ev.id);
+                const takenSeats = evBookings.reduce((sum, b) => sum + (Number(b.seats) || 1), 0);
+                const freeSeats = Math.max(0, ev.maxSeats - takenSeats);
+                const percent = Math.min(100, Math.round((takenSeats / ev.maxSeats) * 100));
+                const userBooking = evBookings.find(b => b.userId === currentUser.id);
+
+                html += `
+                    <div class="pd-card p-4 space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                    <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold" style="background-color: var(--gold-soft); color: var(--text-main);">📅 ${ev.date}</span>
+                                    <span class="px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold" style="background-color: var(--bg-card-soft); color: var(--accent);">🎲 ${ev.game}</span>
+                                </div>
+                                <h3 class="text-base font-black leading-snug">${ev.title}</h3>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <div class="text-base font-black" style="color: var(--accent);">${ev.price === 0 ? 'Бесплатно' : formatKZT(ev.price)}</div>
+                                <div class="text-[10px] font-bold" style="color: var(--text-muted);">за место</div>
+                            </div>
+                        </div>
+
+                        <p class="text-xs leading-relaxed" style="color: var(--text-muted);">${ev.description}</p>
+
+                        <!-- Шкала занятости мест -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs font-extrabold">
+                                <span>Ведущий: ${ev.master}</span>
+                                <span style="color: ${freeSeats > 0 ? 'var(--accent)' : '#DC2626'};">
+                                    ${freeSeats > 0 ? `Свободно: ${freeSeats} из ${ev.maxSeats}` : 'Мест нет'}
+                                </span>
+                            </div>
+                            <div class="w-full h-2.5 rounded-full overflow-hidden" style="background-color: var(--bg-card-soft);">
+                                <div class="h-full rounded-full transition-all duration-300" style="width: ${percent}%; background-color: ${freeSeats > 0 ? 'var(--accent)' : '#EF4444'};"></div>
+                            </div>
+                        </div>
+
+                        ${isAdminMode && evBookings.length > 0 ? `
+                            <div class="pd-card-soft p-2.5 space-y-1">
+                                <div class="text-[11px] font-black uppercase tracking-wider" style="color: var(--text-muted);">Список записавшихся (${takenSeats}):</div>
+                                ${evBookings.map(b => `
+                                    <div class="flex items-center justify-between text-xs font-bold">
+                                        <span>• ${b.userName} ${b.username ? `(${b.username})` : ''} — ${b.seats} мест.</span>
+                                        <span style="color: var(--accent);">${b.usedFreeGame ? '🎁 9-я игра (0 ₸)' : formatKZT(b.finalPrice)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center gap-2 pt-1">
+                            ${userBooking ? `
+                                <div class="flex-1 py-2.5 px-3 rounded-xl text-xs font-extrabold flex items-center justify-between" style="background-color: var(--gold-soft); color: var(--text-main);">
+                                    <span>✅ Вы записаны (${userBooking.seats} мест.)</span>
+                                    <span>${userBooking.usedFreeGame ? '0 ₸' : formatKZT(userBooking.finalPrice)}</span>
+                                </div>
+                                <button onclick="cancelBooking('${userBooking.id}')" class="pd-btn-outline px-3 py-2.5 text-xs text-red-600">Отменить</button>
+                            ` : `
+                                <button onclick="openBookingModal('${ev.id}')" ${freeSeats === 0 ? 'disabled' : ''} class="flex-1 pd-btn-primary py-2.5 px-4 text-xs flex items-center justify-center gap-1.5 ${freeSeats === 0 ? 'opacity-50 cursor-not-allowed' : ''}">
+                                    <i data-lucide="ticket" class="w-4 h-4"></i>
+                                    ${freeSeats > 0 ? 'Записаться за стол' : 'Запись закрыта'}
+                                </button>
+                            `}
+
+                            ${isAdminMode ? `
+                                <button onclick="openEventModal('${ev.id}')" class="pd-btn-outline p-2.5" title="Редактировать">
+                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteEvent('${ev.id}')" class="pd-btn-outline p-2.5 text-red-600" title="Удалить">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return html;
+        }
+
+        // ==========================================
+        // 6. ВКЛАДКА 2: ИГРЫ ЗАЛА (БЕЗ АРЕНДЫ, С ФОТО)
+        // ==========================================
+        function renderCatalogTab() {
+            const genres = ['Все', ...new Set(sharedState.catalog.map(g => g.genre).filter(Boolean))];
+            const filtered = sharedState.catalog.filter(g => {
+                const matchSearch = g.title.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+                                    (g.description || '').toLowerCase().includes(catalogSearch.toLowerCase());
+                const matchGenre = catalogGenre === 'Все' || g.genre === catalogGenre;
+                return matchSearch && matchGenre;
+            });
+
+            let html = `
+                <div class="pd-card p-4 flex items-center justify-between gap-3">
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-1" style="background-color: var(--bg-card-soft); color: var(--accent);">Библиотека клуба</span>
+                        <h2 class="text-lg font-black">Коллекция игр зала</h2>
+                        <p class="text-xs" style="color: var(--text-muted);">Доступны гостям для партий в клубе • ${sharedState.catalog.length} игр</p>
+                    </div>
+                    ${isAdminMode ? `
+                        <div class="flex flex-col gap-1.5 shrink-0">
+                            <button onclick="openCatalogGameModal()" class="pd-btn-primary px-3 py-2 text-xs flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Игра
+                            </button>
+                            <button onclick="openBulkImportModal('catalog')" class="pd-btn-outline px-3 py-1.5 text-[11px] flex items-center gap-1">
+                                <i data-lucide="list-plus" class="w-3.5 h-3.5"></i> Списком
+                            </button>
+                        </div>
+                    ` : `<div class="text-3xl">🏰</div>`}
+                </div>
+
+                <!-- Поиск и фильтр по жанру -->
+                <div class="space-y-2">
+                    <div class="relative">
+                        <input type="text" value="${catalogSearch}" oninput="setCatalogSearch(this.value)" placeholder="Поиск по названию или описанию..." class="pd-input pl-10">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3" style="color: var(--text-muted);"></i>
+                    </div>
+                    <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                        ${genres.map(g => `
+                            <button onclick="setCatalogGenre('${g}')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap border transition" style="${catalogGenre === g ? 'background-color: var(--accent); color: #FFF; border-color: var(--accent);' : 'background-color: var(--bg-card); color: var(--text-main); border-color: var(--border-color);'}">
+                                ${g}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            if (filtered.length === 0) {
+                html += `
+                    <div class="pd-card p-8 text-center space-y-2">
+                        <div class="text-4xl">🔍</div>
+                        <p class="font-extrabold text-sm">Игры по вашему запросу не найдены</p>
+                    </div>
+                `;
+                return html;
+            }
+
+            filtered.forEach(game => {
+                const imgSrc = game.image || generateCoverSvg(game.title, game.emoji || '🎲');
+                html += `
+                    <div class="pd-card overflow-hidden">
+                        <div class="relative h-40 w-full cursor-pointer overflow-hidden" onclick="openImagePreview('${imgSrc.replace(/'/g, "\\'")}', '${game.title.replace(/'/g, "\\'")}')">
+                            <img src="${imgSrc}" alt="${game.title}" onerror="this.src='${generateCoverSvg(game.title, game.emoji || '🎲')}'" class="w-full h-full object-cover">
+                            <div class="absolute top-2.5 left-2.5 flex gap-1.5">
+                                <span class="px-2.5 py-1 rounded-xl text-[11px] font-black backdrop-blur-md bg-black/55 text-white">${game.genre}</span>
+                                <span class="px-2.5 py-1 rounded-xl text-[11px] font-black backdrop-blur-md bg-black/55 text-amber-300">В зале клуба</span>
+                            </div>
+                            ${isAdminMode ? `
+                                <div class="absolute top-2.5 right-2.5 flex gap-1.5" onclick="event.stopPropagation()">
+                                    <button onclick="openCatalogGameModal('${game.id}')" class="w-8 h-8 rounded-xl bg-white/95 text-slate-900 flex items-center justify-center shadow-md" title="Редактировать и фото">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="deleteCatalogGame('${game.id}')" class="w-8 h-8 rounded-xl bg-white/95 text-red-600 flex items-center justify-center shadow-md" title="Удалить">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="p-4 space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <h3 class="text-base font-black">${game.emoji || '🎲'} ${game.title}</h3>
+                                <span class="text-[11px] font-extrabold px-2 py-0.5 rounded-lg" style="background-color: var(--bg-card-soft); color: var(--text-muted);">${game.complexity || 'Средняя'}</span>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 text-xs font-extrabold" style="color: var(--text-muted);">
+                                <span class="px-2.5 py-1 rounded-lg" style="background-color: var(--bg-card-soft);">👥 ${game.players} чел.</span>
+                                <span class="px-2.5 py-1 rounded-lg" style="background-color: var(--bg-card-soft);">⏱ ${game.time}</span>
+                                <span class="px-2.5 py-1 rounded-lg" style="background-color: var(--bg-card-soft);">🔞 ${game.age || '10+'}</span>
+                            </div>
+
+                            <p class="text-xs leading-relaxed" style="color: var(--text-muted);">${game.description}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            return html;
+        }
+
+        // ==========================================
+        // 7. ВКЛАДКА 3: МАГАЗИН (НАСТОЛЬНЫЕ ИГРЫ НА ПРОДАЖУ В ₸)
+        // ==========================================
+        function renderShopTab() {
+            let items = [...sharedState.shop].filter(item =>
+                item.title.toLowerCase().includes(shopSearch.toLowerCase()) ||
+                (item.description || '').toLowerCase().includes(shopSearch.toLowerCase())
+            );
+            if (shopSort === 'cheap') items.sort((a, b) => a.price - b.price);
+            if (shopSort === 'expensive') items.sort((a, b) => b.price - a.price);
+
+            const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+            const cartSum = cart.reduce((s, i) => {
+                const prod = sharedState.shop.find(p => p.id === i.id);
+                return s + (prod ? prod.price * i.qty : 0);
+            }, 0);
+
+            let html = `
+                <div class="pd-card p-4 flex items-center justify-between gap-3" style="background: linear-gradient(135deg, #023E43 0%, #00A19D 100%); color: #FFFFFF;">
+                    <div>
+                        <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider mb-1" style="background-color: var(--gold); color: #023E43;">Новые коробки в плёнке</span>
+                        <h2 class="text-lg font-black">Магазин настольных игр</h2>
+                        <p class="text-xs opacity-90">Кэшбэк ${sharedState.bonusRules.cashbackPercent}% бонусами за каждую покупку</p>
+                    </div>
+                    ${isAdminMode ? `
+                        <div class="flex flex-col gap-1.5 shrink-0">
+                            <button onclick="openShopItemModal()" class="pd-btn-gold px-3 py-2 text-xs flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Товар
+                            </button>
+                            <button onclick="openBulkImportModal('shop')" class="px-3 py-1.5 rounded-xl text-[11px] font-extrabold bg-white/15 text-white flex items-center gap-1">
+                                <i data-lucide="list-plus" class="w-3.5 h-3.5"></i> Прайсом
+                            </button>
+                        </div>
+                    ` : `<div class="text-3xl">🛍️</div>`}
+                </div>
+
+                <!-- Поиск и сортировка -->
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" value="${shopSearch}" oninput="setShopSearch(this.value)" placeholder="Найти игру для покупки..." class="pd-input pl-9">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3" style="color: var(--text-muted);"></i>
+                    </div>
+                    <select onchange="setShopSort(this.value)" class="pd-input w-auto text-xs font-extrabold">
+                        <option value="default" ${shopSort === 'default' ? 'selected' : ''}>По умолчанию</option>
+                        <option value="cheap" ${shopSort === 'cheap' ? 'selected' : ''}>Сначала дешевле</option>
+                        <option value="expensive" ${shopSort === 'expensive' ? 'selected' : ''}>Сначала дороже</option>
+                    </select>
+                </div>
+
+                ${cartCount > 0 ? `
+                    <button onclick="openCartModal()" class="w-full pd-btn-gold p-3.5 flex items-center justify-between shadow-lg">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                            <span class="text-sm font-black">Корзина (${cartCount} шт.)</span>
+                        </div>
+                        <span class="text-sm font-black">${formatKZT(cartSum)} →</span>
+                    </button>
+                ` : ''}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            `;
+
+            items.forEach(item => {
+                const imgSrc = item.image || generateCoverSvg(item.title, item.emoji || '🎁', '#F5A600', '#023E43');
+                const inCart = cart.find(c => c.id === item.id);
+                const outOfStock = (item.stock || 0) <= 0;
+
+                html += `
+                    <div class="pd-card overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <div class="relative h-36 w-full cursor-pointer overflow-hidden" onclick="openImagePreview('${imgSrc.replace(/'/g, "\\'")}', '${item.title.replace(/'/g, "\\'")}')">
+                                <img src="${imgSrc}" alt="${item.title}" onerror="this.src='${generateCoverSvg(item.title, item.emoji || '🎁')}'" class="w-full h-full object-cover">
+                                ${item.badge ? `<span class="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[10px] font-black" style="background-color: var(--gold); color: #023E43;">${item.badge}</span>` : ''}
+                                ${isAdminMode ? `
+                                    <div class="absolute top-2 right-2 flex gap-1" onclick="event.stopPropagation()">
+                                        <button onclick="openShopItemModal('${item.id}')" class="w-7 h-7 rounded-lg bg-white/95 text-slate-900 flex items-center justify-center shadow">
+                                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        <button onclick="deleteShopItem('${item.id}')" class="w-7 h-7 rounded-lg bg-white/95 text-red-600 flex items-center justify-center shadow">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="p-3.5 space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] font-extrabold" style="color: var(--text-muted);">
+                                    <span>👥 ${item.players || '2–4'} чел.</span>
+                                    <span style="color: ${outOfStock ? '#DC2626' : 'var(--accent)'};">
+                                        ${outOfStock ? 'Нет в наличии' : `В наличии: ${item.stock} шт.`}
+                                    </span>
+                                </div>
+                                <h3 class="text-sm font-black leading-snug">${item.title}</h3>
+                                <p class="text-[11px] line-clamp-2" style="color: var(--text-muted);">${item.description}</p>
+                            </div>
+                        </div>
+
+                        <div class="px-3.5 pb-3.5 pt-1 space-y-2">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-base font-black" style="color: var(--accent);">${formatKZT(item.price)}</span>
+                                ${item.oldPrice > item.price ? `<span class="text-xs line-through font-bold" style="color: var(--text-muted);">${formatKZT(item.oldPrice)}</span>` : ''}
+                            </div>
+
+                            ${isAdminMode ? `
+                                <div class="flex gap-1.5">
+                                    <button onclick="adjustShopStock('${item.id}', 1)" class="flex-1 pd-btn-outline py-1.5 text-xs">+1 шт.</button>
+                                    <button onclick="addToCart('${item.id}')" ${outOfStock ? 'disabled' : ''} class="flex-1 pd-btn-primary py-1.5 text-xs ${outOfStock ? 'opacity-40' : ''}">В корзину</button>
+                                </div>
+                            ` : `
+                                ${inCart ? `
+                                    <div class="flex items-center justify-between rounded-xl p-1 border" style="background-color: var(--bg-card-soft); border-color: var(--border-color);">
+                                        <button onclick="changeCartQty('${item.id}', -1)" class="w-8 h-8 rounded-lg font-black text-base flex items-center justify-center" style="background-color: var(--bg-card);">−</button>
+                                        <span class="text-xs font-black">${inCart.qty} шт.</span>
+                                        <button onclick="changeCartQty('${item.id}', 1)" class="w-8 h-8 rounded-lg font-black text-base flex items-center justify-center" style="background-color: var(--accent); color: #FFF;">+</button>
+                                    </div>
+                                ` : `
+                                    <button onclick="addToCart('${item.id}')" ${outOfStock ? 'disabled' : ''} class="w-full pd-btn-primary py-2 text-xs flex items-center justify-center gap-1.5 ${outOfStock ? 'opacity-40 cursor-not-allowed' : ''}">
+                                        <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                                        ${outOfStock ? 'Под заказ' : 'В корзину'}
+                                    </button>
+                                `}
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        // ==========================================
+        // 8. ВКЛАДКА 4: ЛИЧНЫЙ КАБИНЕТ И КАРТА ЛОЯЛЬНОСТИ (9-Я ИГРА БЕСПЛАТНО)
+        // ==========================================
+        function buildQrSvg(codeText) {
+            const size = 21;
+            let hash = 0;
+            for (let i = 0; i < codeText.length; i++) {
+                hash = ((hash << 5) - hash) + codeText.charCodeAt(i);
+                hash |= 0;
+            }
+            let rects = '';
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const isFinder = (r < 7 && c < 7) || (r < 7 && c >= size - 7) || (r >= size - 7 && c < 7);
+                    let fill = false;
+                    if (isFinder) {
+                        const lr = r < 7 ? r : r - (size - 7);
+                        const lc = c < 7 ? c : c - (size - 7);
+                        fill = lr === 0 || lr === 6 || lc === 0 || lc === 6 || (lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4);
+                    } else {
+                        fill = (((r * 31 + c * 17 + Math.abs(hash)) % 7) < 3);
+                    }
+                    if (fill) {
+                        rects += `<rect x="${c * 10}" y="${r * 10}" width="10" height="10" rx="2" fill="#023E43"/>`;
+                    }
+                }
+            }
+            return `<svg viewBox="0 0 ${size * 10} ${size * 10}" class="w-full h-full">${rects}</svg>`;
+        }
+
+        function renderCabinetTab() {
+            const freeEvery = Number(sharedState.bonusRules.freeGameEvery) || 9;
+            const currentCycleStamps = userProfile.stamps % freeEvery;
+            const myBookings = allBookings.filter(b => b.userId === currentUser.id);
+
+            let html = `
+                <!-- Карточка профиля Telegram -->
+                <div class="pd-card p-4 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-12 h-12 rounded-2xl font-black text-base flex items-center justify-center shrink-0" style="background: linear-gradient(135deg, var(--accent), #023E43); color: #FFF;">
+                            ${currentUser.initials}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <h2 class="text-base font-black truncate">${currentUser.name}</h2>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-black" style="background-color: var(--gold-soft); color: var(--text-main);">Личный кабинет</span>
+                            </div>
+                            <p class="text-xs font-bold truncate" style="color: var(--text-muted);">${currentUser.username || 'Telegram'} • ID: ${currentUser.id}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Статистика кабинета -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="pd-card p-3 text-center">
+                        <div class="text-base font-black" style="color: var(--accent);">${formatKZT(userProfile.balance)}</div>
+                        <div class="text-[10px] font-extrabold uppercase mt-0.5" style="color: var(--text-muted);">Бонусы</div>
+                    </div>
+                    <div class="pd-card p-3 text-center">
+                        <div class="text-base font-black" style="color: var(--gold);">${userProfile.freeGamesAvailable || 0} шт.</div>
+                        <div class="text-[10px] font-extrabold uppercase mt-0.5" style="color: var(--text-muted);">Игры 0 ₸</div>
+                    </div>
+                    <div class="pd-card p-3 text-center">
+                        <div class="text-base font-black">${myBookings.length}</div>
+                        <div class="text-[10px] font-extrabold uppercase mt-0.5" style="color: var(--text-muted);">Записи</div>
+                    </div>
+                </div>
+            `;
+
+            // Виртуальная карта лояльности
+            if (!userProfile.hasCard) {
+                html += `
+                    <div class="pd-card p-5 text-center space-y-3" style="background: linear-gradient(135deg, #023E43 0%, #00A19D 100%); color: #FFFFFF;">
+                        <div class="text-4xl">💳</div>
+                        <h3 class="text-lg font-black">Карта гостя ${sharedState.club.name}</h3>
+                        <p class="text-xs opacity-90 leading-relaxed">
+                            Оформите карту в 1 клик, получите приветственные <b>${formatKZT(sharedState.bonusRules.welcomeBonus)}</b>, копите <b>${sharedState.bonusRules.cashbackPercent}%</b> кэшбэк и играйте каждую <b>${freeEvery}-ю игротеку бесплатно (0 ₸)</b>!
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                            <button onclick="issueLoyaltyCard()" class="flex-1 pd-btn-gold py-3 px-4 text-xs">
+                                ✨ Выпустить карту (+${formatKZT(sharedState.bonusRules.welcomeBonus)})
+                            </button>
+                            <button onclick="openLinkPhysicalCardModal()" class="py-3 px-4 rounded-xl text-xs font-extrabold bg-white/15 text-white">
+                                Привязать пластиковую
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <!-- Визуальная карта лояльности -->
+                    <div class="rounded-3xl p-5 text-white shadow-xl relative overflow-hidden" style="background: linear-gradient(135deg, #023E43 0%, #00A19D 100%);">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-[10px] font-black uppercase tracking-widest" style="color: var(--gold);">${sharedState.club.name} • CLUB CARD</div>
+                                <div class="text-2xl font-black mt-1">${formatKZT(userProfile.balance)}</div>
+                                <div class="text-xs opacity-80 font-bold mt-0.5">Кэшбэк ${sharedState.bonusRules.cashbackPercent}% • № ${userProfile.cardNumber}</div>
+                            </div>
+                            <button onclick="openQrZoomModal()" class="w-16 h-16 p-1.5 rounded-2xl bg-white shadow-md shrink-0" title="Увеличить QR-код">
+                                ${buildQrSvg(userProfile.cardNumber)}
+                            </button>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] font-bold">
+                            <span>Владелец: ${userProfile.name}</span>
+                            <button onclick="openQrZoomModal()" class="underline" style="color: var(--gold);">Показать QR на кассе</button>
+                        </div>
+                    </div>
+                `;
+
+                // Трекер штампов: каждая 9-я игротека бесплатная!
+                if (sharedState.bonusRules.stampsEnabled) {
+                    const cells = [];
+                    for (let i = 1; i <= freeEvery; i++) {
+                        const isFreeSlot = (i === freeEvery);
+                        const isFilled = i <= currentCycleStamps;
+                        cells.push(`
+                            <div class="aspect-square rounded-2xl flex flex-col items-center justify-center border text-center p-1 transition ${isFreeSlot ? 'border-amber-400' : ''}"
+                                style="${isFilled
+                                    ? 'background-color: var(--accent); color: #FFF; border-color: var(--accent);'
+                                    : isFreeSlot
+                                        ? 'background-color: var(--gold-soft); color: var(--text-main);'
+                                        : 'background-color: var(--bg-card-soft); color: var(--text-muted); border-color: var(--border-color);'}">
+                                <span class="text-sm font-black">${isFreeSlot ? '🎁' : (isFilled ? '✓' : i)}</span>
+                                <span class="text-[9px] font-extrabold leading-tight">${isFreeSlot ? `${freeEvery}-я • 0 ₸` : `${i}-я игра`}</span>
+                            </div>
+                        `);
+                    }
+
+                    html += `
+                        <div class="pd-card p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-sm font-black">Штампы игротек (${currentCycleStamps} из ${freeEvery - 1})</h3>
+                                    <p class="text-[11px]" style="color: var(--text-muted);">Каждая <b>${freeEvery}-я игротека — бесплатно (0 ₸)</b></p>
+                                </div>
+                                ${userProfile.freeGamesAvailable > 0 ? `
+                                    <span class="px-2.5 py-1 rounded-xl text-xs font-black" style="background-color: var(--gold); color: #023E43;">Доступно: ${userProfile.freeGamesAvailable} 🎁</span>
+                                ` : ''}
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${cells.join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Кассовая панель и журнал уведомлений (только для Админа)
+            if (isAdminMode) {
+                html += `
+                    <div class="pd-card p-4 space-y-3 border-2" style="border-color: var(--gold);">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-black flex items-center gap-1.5">🛡️ Касса администратора</h3>
+                            <button onclick="openClubSettingsModal('notify')" class="text-xs font-extrabold underline" style="color: var(--accent);">Настроить Telegram</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" id="cashierCheckInput" placeholder="Сумма чека в ₸" class="pd-input">
+                            <button onclick="cashierAccrueFromCheck()" class="pd-btn-primary text-xs px-3 py-2">Начислить кэшбэк</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="cashierAddStamp()" class="flex-1 pd-btn-outline py-2 text-xs">+1 штамп за игру</button>
+                            <button onclick="cashierRedeemFreeGame()" class="flex-1 pd-btn-gold py-2 text-xs">🎁 Списать игру 0 ₸</button>
+                        </div>
+                    </div>
+
+                    <!-- Журнал записей и заказов в реальном времени -->
+                    <div class="pd-card p-4 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-black">🔔 Журнал записей и заказов</h3>
+                            <span class="text-[11px] font-bold" style="color: var(--text-muted);">Live</span>
+                        </div>
+                        ${adminLogs.length === 0 ? `<p class="text-xs" style="color: var(--text-muted);">Пока новых событий нет</p>` : `
+                            <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                ${adminLogs.map(log => `
+                                    <div class="pd-card-soft p-2.5 text-xs space-y-0.5">
+                                        <div class="flex justify-between font-black">
+                                            <span>${log.title}</span>
+                                            <span style="color: var(--text-muted);">${log.time}</span>
+                                        </div>
+                                        <div class="whitespace-pre-line" style="color: var(--text-muted);">${log.text}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `}
+                    </div>
+                `;
+            }
+
+            // История операций пользователя
+            if (userProfile.history && userProfile.history.length > 0) {
+                html += `
+                    <div class="pd-card p-4 space-y-2">
+                        <h3 class="text-sm font-black">История бонусов и посещений</h3>
+                        <div class="space-y-1.5">
+                            ${userProfile.history.slice(0, 10).map(h => `
+                                <div class="flex items-center justify-between text-xs py-1.5 border-b last:border-b-0" style="border-color: var(--border-color);">
+                                    <div>
+                                        <div class="font-extrabold">${h.title}</div>
+                                        <div class="text-[10px]" style="color: var(--text-muted);">${h.date}</div>
+                                    </div>
+                                    <div class="font-black" style="color: ${h.delta >= 0 ? 'var(--accent)' : '#DC2626'};">
+                                        ${h.delta > 0 ? '+' + formatKZT(h.delta) : h.delta < 0 ? '−' + formatKZT(Math.abs(h.delta)) : h.badge || '0 ₸'}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        // ==========================================
+        // 9. МОДАЛЬНЫЕ ОКНА И ДЕЙСТВИЯ
+        // ==========================================
+        function openModal(innerHtml) {
+            document.getElementById('modalContainer').innerHTML = innerHtml;
+            document.getElementById('modalBackdrop').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        window.closeModal = function () {
+            document.getElementById('modalBackdrop').classList.add('hidden');
+        };
+
+        window.closeModalOnBackdrop = function (e) {
+            if (e.target.id === 'modalBackdrop') closeModal();
+        };
+
+        // Запись на игротеку
+        window.openBookingModal = function (eventId) {
+            const ev = sharedState.events.find(e => e.id === eventId);
+            if (!ev) return;
+            const taken = allBookings.filter(b => b.eventId === ev.id).reduce((s, b) => s + (b.seats || 1), 0);
+            const free = Math.max(1, ev.maxSeats - taken);
+
+            openModal(`
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">Запись на игротеку</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="pd-card-soft p-3 text-xs space-y-1">
+                        <div class="font-black text-sm">${ev.title}</div>
+                        <div style="color: var(--text-muted);">📅 ${ev.date} • 🎲 ${ev.game}</div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold">Ваше имя</label>
+                        <input type="text" id="bookUserName" value="${currentUser.name}" class="pd-input">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold">Количество мест (доступно: ${free})</label>
+                        <input type="number" id="bookSeats" min="1" max="${free}" value="1" oninput="recalcBookingTotal('${ev.id}')" class="pd-input">
+                    </div>
+
+                    ${userProfile.hasCard && userProfile.freeGamesAvailable > 0 ? `
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer" style="background-color: var(--gold-soft); border-color: var(--gold);">
+                            <input type="checkbox" id="bookUseFreeGame" onchange="recalcBookingTotal('${ev.id}')" class="w-4 h-4">
+                            <span class="text-xs font-black">🎁 Использовать бесплатную ${sharedState.bonusRules.freeGameEvery}-ю игру (1 место за 0 ₸)</span>
+                        </label>
+                    ` : ''}
+
+                    ${userProfile.hasCard && userProfile.balance > 0 && sharedState.bonusRules.allowBonusPay ? `
+                        <label class="flex items-center gap-2.5 p-3 rounded-xl pd-card-soft cursor-pointer">
+                            <input type="checkbox" id="bookUseBonus" onchange="recalcBookingTotal('${ev.id}')" class="w-4 h-4">
+                            <span class="text-xs font-extrabold">Списать бонусы (доступно ${formatKZT(userProfile.balance)}, до ${sharedState.bonusRules.maxBonusPayPercent}%)</span>
+                        </label>
+                    ` : ''}
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold">Комментарий или телефон (необязательно)</label>
+                        <input type="text" id="bookComment" placeholder="Например: приду с другом, +7 707..." class="pd-input">
+                    </div>
+
+                    <div class="pd-card-soft p-3.5 flex items-center justify-between">
+                        <span class="text-xs font-extrabold">Итого к оплате в клубе:</span>
+                        <span id="bookTotalText" class="text-lg font-black" style="color: var(--accent);">${formatKZT(ev.price)}</span>
+                    </div>
+
+                    <button onclick="confirmBooking('${ev.id}')" class="w-full pd-btn-primary py-3 text-sm">Подтвердить запись</button>
+                </div>
+            `);
+        };
+
+        window.recalcBookingTotal = function (eventId) {
+            const ev = sharedState.events.find(e => e.id === eventId);
+            if (!ev) return;
+            const seats = Math.max(1, Number(document.getElementById('bookSeats')?.value) || 1);
+            const useFree = document.getElementById('bookUseFreeGame')?.checked || false;
+            const useBonus = document.getElementById('bookUseBonus')?.checked || false;
+
+            const payableSeats = useFree ? Math.max(0, seats - 1) : seats;
+            let total = payableSeats * ev.price;
+
+            if (useBonus && total > 0) {
+                const maxDiscount = Math.floor(total * (sharedState.bonusRules.maxBonusPayPercent / 100));
+                const discount = Math.min(userProfile.balance, maxDiscount);
+                total -= discount;
+            }
+            const el = document.getElementById('bookTotalText');
+            if (el) el.textContent = formatKZT(total);
+        };
+
+        window.confirmBooking = async function (eventId) {
+            const ev = sharedState.events.find(e => e.id === eventId);
+            if (!ev) return;
+            const name = document.getElementById('bookUserName').value.trim() || currentUser.name;
+            const seats = Math.max(1, Number(document.getElementById('bookSeats').value) || 1);
+            const useFree = document.getElementById('bookUseFreeGame')?.checked || false;
+            const useBonus = document.getElementById('bookUseBonus')?.checked || false;
+            const comment = document.getElementById('bookComment').value.trim();
+
+            const payableSeats = useFree ? Math.max(0, seats - 1) : seats;
+            let finalPrice = payableSeats * ev.price;
+            let spentBonus = 0;
+
+            if (useBonus && finalPrice > 0) {
+                const maxDiscount = Math.floor(finalPrice * (sharedState.bonusRules.maxBonusPayPercent / 100));
+                spentBonus = Math.min(userProfile.balance, maxDiscount);
+                finalPrice -= spentBonus;
+            }
+
+            if (useFree && userProfile.freeGamesAvailable > 0) {
+                userProfile.freeGamesAvailable -= 1;
+                userProfile.history.unshift({
+                    title: `Бесплатная ${sharedState.bonusRules.freeGameEvery}-я игра: ${ev.title}`,
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    delta: 0,
+                    badge: '🎁 0 ₸'
+                });
+            }
+            if (spentBonus > 0) {
+                userProfile.balance -= spentBonus;
+                userProfile.history.unshift({
+                    title: `Списание на игротеку: ${ev.title}`,
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    delta: -spentBonus
+                });
+            }
+            await persistUserProfile();
+
+            const booking = {
+                id: 'bk_' + Date.now() + '_' + currentUser.id,
+                eventId: ev.id,
+                eventTitle: ev.title,
+                userId: currentUser.id,
+                userName: name,
+                username: currentUser.username,
+                seats,
+                finalPrice,
+                spentBonus,
+                usedFreeGame: useFree,
+                comment,
+                createdAt: Date.now()
+            };
+
+            await saveBookingRecord(booking);
+            await notifyAdmin(
+                'Новая запись на игротеку!',
+                `🎲 Игра: ${ev.title} (${ev.date})\n👤 Гость: ${name} ${currentUser.username}\n💺 Мест: ${seats}\n💰 К оплате: ${useFree ? '🎁 Бесплатная 9-я игра (0 ₸)' : formatKZT(finalPrice)}${comment ? `\n💬 Комментарий: ${comment}` : ''}`
+            );
+
+            closeModal();
+            showToast('Вы успешно записаны за стол!');
+        };
+
+        window.cancelBooking = async function (bookingId) {
+            const bk = allBookings.find(b => b.id === bookingId);
+            if (!bk) return;
+
+            if (bk.spentBonus > 0) {
+                userProfile.balance += bk.spentBonus;
+            }
+            if (bk.usedFreeGame) {
+                userProfile.freeGamesAvailable = (userProfile.freeGamesAvailable || 0) + 1;
+            }
+            await persistUserProfile();
+            await deleteBookingRecord(bookingId);
+            await notifyAdmin(
+                'Отмена записи',
+                `❌ Гость ${bk.userName} отменил запись на «${bk.eventTitle}» (${bk.seats} мест.)`
+            );
+            showToast('Запись отменена');
+        };
+
+        // Вход в режим Админа (логин и пароль)
+        window.handleRoleToggle = function () {
+            if (isAdminMode) {
+                isAdminMode = false;
+                renderHeader();
+                renderActiveTab();
+                showToast('Вы вышли из режима администратора');
+                return;
+            }
+            openModal(`
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">Вход для администратора</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <p class="text-xs" style="color: var(--text-muted);">Введите логин и пароль сотрудника клуба ${sharedState.club.name}.</p>
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold">Логин</label>
+                        <input type="text" id="adminLoginInput" placeholder="admin" class="pd-input">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-extrabold">Пароль</label>
+                        <input type="password" id="adminPassInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitAdminLogin()" class="pd-input">
+                    </div>
+                    <button onclick="submitAdminLogin()" class="w-full pd-btn-primary py-3 text-sm">Войти в панель управления</button>
+                </div>
+            `);
+        };
+
+        window.submitAdminLogin = function () {
+            if (Date.now() < adminLockUntil) {
+                showToast('Слишком много попыток. Подождите 30 сек.', 'error');
+                return;
+            }
+            const login = document.getElementById('adminLoginInput').value.trim();
+            const pass = document.getElementById('adminPassInput').value;
+            if (login === sharedState.adminAuth.login && simpleHash(pass) === sharedState.adminAuth.passHash) {
+                isAdminMode = true;
+                adminFailCount = 0;
+                closeModal();
+                renderHeader();
+                renderActiveTab();
+                showToast('Добро пожаловать, Администратор!');
+            } else {
+                adminFailCount++;
+                if (adminFailCount >= 5) adminLockUntil = Date.now() + 30000;
+                showToast('Неверный логин или пароль', 'error');
+            }
+        };
+
+        window.handleLogoClick = function () {
+            if (isAdminMode) openClubSettingsModal('general');
+            else switchTab('events');
+        };
+
+        // Настройки клуба, бонусной системы (9-я игра бесплатно), уведомлений и пароля
+        window.openClubSettingsModal = function (subTab = 'general') {
+            if (!isAdminMode) return;
+            openModal(`
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">Настройки клуба</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-1 p-1 rounded-2xl pd-card-soft text-[11px] font-extrabold">
+                        <button onclick="openClubSettingsModal('general')" class="py-2 rounded-xl" style="${subTab === 'general' ? 'background-color: var(--accent); color: #FFF;' : ''}">Клуб</button>
+                        <button onclick="openClubSettingsModal('bonus')" class="py-2 rounded-xl" style="${subTab === 'bonus' ? 'background-color: var(--accent); color: #FFF;' : ''}">Бонусы</button>
+                        <button onclick="openClubSettingsModal('notify')" class="py-2 rounded-xl" style="${subTab === 'notify' ? 'background-color: var(--accent); color: #FFF;' : ''}">Уведомл.</button>
+                        <button onclick="openClubSettingsModal('security')" class="py-2 rounded-xl" style="${subTab === 'security' ? 'background-color: var(--accent); color: #FFF;' : ''}">Пароль</button>
+                    </div>
+
+                    ${subTab === 'general' ? `
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-extrabold">Название клуба</label>
+                                <input type="text" id="cfgClubName" value="${sharedState.club.name}" class="pd-input mt-1">
+                            </div>
+                            <div>
+                                <label class="text-xs font-extrabold">Подзаголовок в шапке</label>
+                                <input type="text" id="cfgClubSub" value="${sharedState.club.subtitle}" class="pd-input mt-1">
+                            </div>
+                            <button onclick="saveClubGeneral()" class="w-full pd-btn-primary py-3 text-xs">Сохранить название</button>
+                        </div>
+                    ` : ''}
+
+                    ${subTab === 'bonus' ? `
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs font-extrabold">Приветственные (₸)</label>
+                                    <input type="number" id="cfgWelcomeBonus" value="${sharedState.bonusRules.welcomeBonus}" class="pd-input mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-extrabold">Кэшбэк с чека (%)</label>
+                                    <input type="number" id="cfgCashback" value="${sharedState.bonusRules.cashbackPercent}" class="pd-input mt-1">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs font-extrabold">Макс. оплата бонусами (%)</label>
+                                    <input type="number" id="cfgMaxPay" value="${sharedState.bonusRules.maxBonusPayPercent}" class="pd-input mt-1">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-extrabold">Бесплатная каждая N-я игра</label>
+                                    <input type="number" id="cfgFreeEvery" min="2" max="20" value="${sharedState.bonusRules.freeGameEvery}" class="pd-input mt-1">
+                                </div>
+                            </div>
+                            <button onclick="saveBonusRules()" class="w-full pd-btn-primary py-3 text-xs">Сохранить бонусные правила</button>
+                        </div>
+                    ` : ''}
+
+                    ${subTab === 'notify' ? `
+                        <div class="space-y-3">
+                            <p class="text-xs" style="color: var(--text-muted);">Укажите Token бота из @BotFather и ваш Telegram ID, чтобы получать мгновенные сообщения о записях за столы и заказах.</p>
+                            <div>
+                                <label class="text-xs font-extrabold">Bot Token</label>
+                                <input type="text" id="cfgBotToken" value="${sharedState.telegramNotify?.botToken || ''}" placeholder="123456789:AAH..." class="pd-input mt-1">
+                            </div>
+                            <div>
+                                <label class="text-xs font-extrabold">Telegram ID администратора</label>
+                                <div class="flex gap-2 mt-1">
+                                    <input type="text" id="cfgAdminChatId" value="${sharedState.telegramNotify?.adminChatId || ''}" placeholder="Например: 415283910" class="pd-input flex-1">
+                                    <button onclick="document.getElementById('cfgAdminChatId').value='${currentUser.id}'" class="pd-btn-outline px-3 text-xs shrink-0">Мой ID</button>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="saveTelegramNotify(true)" class="flex-1 pd-btn-outline py-2.5 text-xs">Тест в Telegram</button>
+                                <button onclick="saveTelegramNotify(false)" class="flex-1 pd-btn-primary py-2.5 text-xs">Сохранить</button>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${subTab === 'security' ? `
+                        <div class="space-y-3">
+                            <div>
+                                <label class="text-xs font-extrabold">Новый логин</label>
+                                <input type="text" id="cfgNewLogin" value="${sharedState.adminAuth.login}" class="pd-input mt-1">
+                            </div>
+                            <div>
+                                <label class="text-xs font-extrabold">Новый пароль</label>
+                                <input type="password" id="cfgNewPass" placeholder="Введите новый пароль" class="pd-input mt-1">
+                            </div>
+                            <button onclick="saveAdminSecurity()" class="w-full pd-btn-primary py-3 text-xs">Обновить доступ</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `);
+        };
+
+        window.saveClubGeneral = async function () {
+            sharedState.club.name = document.getElementById('cfgClubName').value.trim() || 'ParaDice';
+            sharedState.club.subtitle = document.getElementById('cfgClubSub').value.trim() || 'Магазин и Клуб Настольных Игр';
+            await persistSharedState();
+            closeModal();
+            showToast('Название клуба обновлено');
+        };
+
+        window.saveBonusRules = async function () {
+            sharedState.bonusRules.welcomeBonus = Math.max(0, Number(document.getElementById('cfgWelcomeBonus').value) || 0);
+            sharedState.bonusRules.cashbackPercent = Math.max(0, Math.min(100, Number(document.getElementById('cfgCashback').value) || 10));
+            sharedState.bonusRules.maxBonusPayPercent = Math.max(0, Math.min(100, Number(document.getElementById('cfgMaxPay').value) || 30));
+            sharedState.bonusRules.freeGameEvery = Math.max(2, Number(document.getElementById('cfgFreeEvery').value) || 9);
+            await persistSharedState();
+            closeModal();
+            showToast('Бонусные правила обновлены');
+        };
+
+        window.saveTelegramNotify = async function (sendTest) {
+            sharedState.telegramNotify = {
+                botToken: document.getElementById('cfgBotToken').value.trim(),
+                adminChatId: document.getElementById('cfgAdminChatId').value.trim(),
+                enabled: true
+            };
+            await persistSharedState();
+            if (sendTest) {
+                await notifyAdmin('Тестовое уведомление', '✅ Уведомления о записях на игротеки и заказах магазина успешно подключены!');
+                showToast('Тест отправлен в Telegram');
+            } else {
+                closeModal();
+                showToast('Настройки уведомлений сохранены');
+            }
+        };
+
+        window.saveAdminSecurity = async function () {
+            const login = document.getElementById('cfgNewLogin').value.trim();
+            const pass = document.getElementById('cfgNewPass').value;
+            if (!login || pass.length < 4) {
+                showToast('Пароль должен быть не короче 4 символов', 'error');
+                return;
+            }
+            sharedState.adminAuth = { login, passHash: simpleHash(pass) };
+            await persistSharedState();
+            closeModal();
+            showToast('Логин и пароль администратора обновлены');
+        };
+
+        // Кастомизация темы
+        window.openThemeModal = function () {
+            const accents = ['#00A19D', '#F5A600', '#0284C7', '#16A34A', '#9333EA', '#E11D48'];
+            openModal(`
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">Оформление приложения</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div>
+                        <label class="text-xs font-extrabold">Режим темы</label>
+                        <div class="grid grid-cols-2 gap-2 mt-1.5">
+                            <button onclick="setThemeMode('light')" class="py-2.5 rounded-xl text-xs font-extrabold border" style="${themePrefs.mode === 'light' ? 'background-color: var(--accent); color: #FFF;' : ''}">☀️ Фирменная светлая</button>
+                            <button onclick="setThemeMode('dark')" class="py-2.5 rounded-xl text-xs font-extrabold border" style="${themePrefs.mode === 'dark' ? 'background-color: var(--accent); color: #FFF;' : ''}">🌙 Ночной клуб</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-extrabold">Акцентный цвет</label>
+                        <div class="flex items-center gap-2 mt-1.5">
+                            ${accents.map(c => `<button onclick="setThemeAccent('${c}')" class="w-8 h-8 rounded-full border-2" style="background-color: ${c}; border-color: ${themePrefs.accent === c ? '#023E43' : 'transparent'};"></button>`).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-extrabold">Фоновый узор</label>
+                        <div class="grid grid-cols-3 gap-2 mt-1.5 text-xs font-extrabold">
+                            <button onclick="setThemePattern('bg-d20-pattern')" class="py-2 rounded-xl border">Грани D20</button>
+                            <button onclick="setThemePattern('bg-dots-pattern')" class="py-2 rounded-xl border">Точки</button>
+                            <button onclick="setThemePattern('bg-clean-pattern')" class="py-2 rounded-xl border">Чистый</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+        };
+
+        window.setThemeMode = function (m) {
+            themePrefs.mode = m;
+            saveLocalJson(LOCAL_THEME_KEY, themePrefs);
+            applyTheme();
+            openThemeModal();
+        };
+        window.setThemeAccent = function (c) {
+            themePrefs.accent = c;
+            saveLocalJson(LOCAL_THEME_KEY, themePrefs);
+            applyTheme();
+            openThemeModal();
+        };
+        window.setThemePattern = function (p) {
+            themePrefs.pattern = p;
+            saveLocalJson(LOCAL_THEME_KEY, themePrefs);
+            applyTheme();
+        };
+
+        // Добавление/редактирование анонса игротеки (Админ)
+        window.openEventModal = function (eventId = null) {
+            const ev = eventId ? sharedState.events.find(e => e.id === eventId) : null;
+            openModal(`
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">${ev ? 'Редактировать игротеку' : 'Новый анонс игротеки'}</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <input type="text" id="evTitle" value="${ev?.title || ''}" placeholder="Название (например: Вечерняя Дюна)" class="pd-input">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="evDate" value="${ev?.date || ''}" placeholder="Пятница, 19:00" class="pd-input">
+                        <input type="text" id="evGame" value="${ev?.game || ''}" placeholder="Настольная игра" class="pd-input">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" id="evMaster" value="${ev?.master || 'Мастер клуба'}" placeholder="Ведущий" class="pd-input">
+                        <input type="number" id="evPrice" value="${ev ? ev.price : 2000}" placeholder="Цена (₸)" class="pd-input">
+                        <input type="number" id="evSeats" value="${ev?.maxSeats || 6}" placeholder="Мест" class="pd-input">
+                    </div>
+                    <textarea id="evDesc" rows="3" placeholder="Описание игротеки..." class="pd-input">${ev?.description || ''}</textarea>
+                    <button onclick="saveEventItem('${eventId || ''}')" class="w-full pd-btn-primary py-3 text-sm">Сохранить анонс</button>
+                </div>
+            `);
+        };
+
+        window.saveEventItem = async function (eventId) {
+            const item = {
+                id: eventId || 'ev_' + Date.now(),
+                title: document.getElementById('evTitle').value.trim() || 'Игротека клуба',
+                date: document.getElementById('evDate').value.trim() || 'Скоро',
+                game: document.getElementById('evGame').value.trim() || 'Настольная игра',
+                master: document.getElementById('evMaster').value.trim() || 'Ведущий',
+                price: Math.max(0, Number(document.getElementById('evPrice').value) || 0),
+                maxSeats: Math.max(1, Number(document.getElementById('evSeats').value) || 4),
+                description: document.getElementById('evDesc').value.trim()
+            };
+            if (eventId) {
+                const idx = sharedState.events.findIndex(e => e.id === eventId);
+                if (idx >= 0) sharedState.events[idx] = item;
+            } else {
+                sharedState.events.unshift(item);
+            }
+            await persistSharedState();
+            closeModal();
+            showToast('Анонс игротеки сохранён');
+        };
+
+        window.deleteEvent = async function (id) {
+            sharedState.events = sharedState.events.filter(e => e.id !== id);
+            await persistSharedState();
+            showToast('Анонс удалён');
+        };
+
+        // Добавление/редактирование игры в коллекции зала (с фото)
+        window.openCatalogGameModal = function (gameId = null) {
+            const g = gameId ? sharedState.catalog.find(x => x.id === gameId) : null;
+            openModal(`
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">${g ? 'Редактировать игру зала' : 'Добавить игру в зал'}</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <input type="text" id="catEmoji" value="${g?.emoji || '🎲'}" class="pd-input text-center text-lg">
+                        <input type="text" id="catTitle" value="${g?.title || ''}" placeholder="Название игры" class="pd-input col-span-3">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="text" id="catPlayers" value="${g?.players || '2–4'}" placeholder="Игроки" class="pd-input">
+                        <input type="text" id="catTime" value="${g?.time || '60 мин'}" placeholder="Время" class="pd-input">
+                        <input type="text" id="catGenre" value="${g?.genre || 'Стратегия'}" placeholder="Жанр" class="pd-input">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold">Картинка к описанию (ссылка или файл с устройства)</label>
+                        <input type="text" id="catImageUrl" value="${g?.image && !g.image.startsWith('data:image/svg') ? g.image : ''}" placeholder="https://..." class="pd-input">
+                        <input type="file" accept="image/*" onchange="handleFileToDataUrl(this, 'catImageUrl')" class="text-xs">
+                    </div>
+                    <textarea id="catDesc" rows="3" placeholder="Описание настольной игры для гостей зала..." class="pd-input">${g?.description || ''}</textarea>
+                    <button onclick="saveCatalogGame('${gameId || ''}')" class="w-full pd-btn-primary py-3 text-sm">Сохранить в коллекцию</button>
+                </div>
+            `);
+        };
+
+        window.handleFileToDataUrl = function (input, targetInputId) {
+            const file = input.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 640;
+                    const scale = Math.min(1, maxW / img.width);
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    document.getElementById(targetInputId).value = canvas.toDataURL('image/jpeg', 0.78);
+                    showToast('Изображение загружено');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveCatalogGame = async function (gameId) {
+            const title = document.getElementById('catTitle').value.trim() || 'Настольная игра';
+            const emoji = document.getElementById('catEmoji').value.trim() || '🎲';
+            const rawImg = document.getElementById('catImageUrl').value.trim();
+            const item = {
+                id: gameId || 'cat_' + Date.now(),
+                title,
+                emoji,
+                players: document.getElementById('catPlayers').value.trim() || '2–4',
+                time: document.getElementById('catTime').value.trim() || '60 мин',
+                age: '10+',
+                genre: document.getElementById('catGenre').value.trim() || 'Стратегия',
+                complexity: 'Средняя',
+                image: rawImg || generateCoverSvg(title, emoji),
+                description: document.getElementById('catDesc').value.trim()
+            };
+            if (gameId) {
+                const idx = sharedState.catalog.findIndex(x => x.id === gameId);
+                if (idx >= 0) sharedState.catalog[idx] = item;
+            } else {
+                sharedState.catalog.unshift(item);
+            }
+            await persistSharedState();
+            closeModal();
+            showToast('Игра сохранена в каталог зала');
+        };
+
+        window.deleteCatalogGame = async function (id) {
+            sharedState.catalog = sharedState.catalog.filter(g => g.id !== id);
+            await persistSharedState();
+            showToast('Игра удалена из каталога');
+        };
+
+        // Добавление/редактирование товара магазина (Админ)
+        window.openShopItemModal = function (itemId = null) {
+            const it = itemId ? sharedState.shop.find(x => x.id === itemId) : null;
+            openModal(`
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">${it ? 'Редактировать товар' : 'Новый товар на продажу'}</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <input type="text" id="shTitle" value="${it?.title || ''}" placeholder="Название коробки" class="pd-input">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" id="shPrice" value="${it ? it.price : 15000}" placeholder="Цена (₸)" class="pd-input">
+                        <input type="number" id="shOldPrice" value="${it?.oldPrice || ''}" placeholder="Старая цена" class="pd-input">
+                        <input type="number" id="shStock" value="${it ? it.stock : 3}" placeholder="Остаток" class="pd-input">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-extrabold">Фото коробки (ссылка или файл)</label>
+                        <input type="text" id="shImageUrl" value="${it?.image && !it.image.startsWith('data:image/svg') ? it.image : ''}" placeholder="https://..." class="pd-input">
+                        <input type="file" accept="image/*" onchange="handleFileToDataUrl(this, 'shImageUrl')" class="text-xs">
+                    </div>
+                    <textarea id="shDesc" rows="2" placeholder="Описание товара..." class="pd-input">${it?.description || ''}</textarea>
+                    <button onclick="saveShopItem('${itemId || ''}')" class="w-full pd-btn-primary py-3 text-sm">Сохранить на витрине</button>
+                </div>
+            `);
+        };
+
+        window.saveShopItem = async function (itemId) {
+            const title = document.getElementById('shTitle').value.trim() || 'Настольная игра';
+            const rawImg = document.getElementById('shImageUrl').value.trim();
+            const item = {
+                id: itemId || 'shop_' + Date.now(),
+                title,
+                emoji: '🎁',
+                price: Math.max(0, Number(document.getElementById('shPrice').value) || 0),
+                oldPrice: Math.max(0, Number(document.getElementById('shOldPrice').value) || 0),
+                stock: Math.max(0, Number(document.getElementById('shStock').value) || 0),
+                players: '2–5',
+                badge: 'Новая в плёнке',
+                image: rawImg || generateCoverSvg(title, '🎁', '#F5A600', '#023E43'),
+                description: document.getElementById('shDesc').value.trim()
+            };
+            if (itemId) {
+                const idx = sharedState.shop.findIndex(x => x.id === itemId);
+                if (idx >= 0) sharedState.shop[idx] = item;
+            } else {
+                sharedState.shop.unshift(item);
+            }
+            await persistSharedState();
+            closeModal();
+            showToast('Витрина магазина обновлена');
+        };
+
+        window.deleteShopItem = async function (id) {
+            sharedState.shop = sharedState.shop.filter(x => x.id !== id);
+            await persistSharedState();
+            showToast('Товар удалён с витрины');
+        };
+
+        window.adjustShopStock = async function (id, delta) {
+            const it = sharedState.shop.find(x => x.id === id);
+            if (!it) return;
+            it.stock = Math.max(0, (it.stock || 0) + delta);
+            await persistSharedState();
+        };
+
+        // Импорт списком (игры зала или прайс магазина)
+        window.openBulkImportModal = function (mode) {
+            openModal(`
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">${mode === 'shop' ? 'Добавить прайс-листом' : 'Добавить список игр зала'}</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <p class="text-xs" style="color: var(--text-muted);">
+                        ${mode === 'shop'
+                            ? 'Каждая строка: Название | Цена в ₸ | Остаток шт.'
+                            : 'Каждая строка: Название | Игроки | Время | Жанр'}
+                    </p>
+                    <textarea id="bulkLinesInput" rows="6" placeholder="${mode === 'shop' ? 'Каркассон | 14500 | 3\nКодовые имена | 11900 | 5' : 'Каркассон | 2-5 | 45 мин | Семейная\nМафия | 6-15 | 40 мин | Вечеринка'}" class="pd-input"></textarea>
+                    <button onclick="processBulkImport('${mode}')" class="w-full pd-btn-primary py-3 text-sm">Импортировать список</button>
+                </div>
+            `);
+        };
+
+        window.processBulkImport = async function (mode) {
+            const lines = document.getElementById('bulkLinesInput').value.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length === 0) return;
+
+            lines.forEach((line, idx) => {
+                const parts = line.split('|').map(p => p.trim());
+                if (mode === 'shop') {
+                    const title = parts[0] || 'Игра';
+                    sharedState.shop.unshift({
+                        id: 'shop_' + Date.now() + '_' + idx,
+                        title,
+                        emoji: '🎁',
+                        price: Number(parts[1]) || 15000,
+                        oldPrice: 0,
+                        stock: Number(parts[2]) || 2,
+                        players: '2–5',
+                        badge: 'В наличии',
+                        image: generateCoverSvg(title, '🎁', '#F5A600', '#023E43'),
+                        description: 'Новая запечатанная коробка в плёнке.'
+                    });
+                } else {
+                    const title = parts[0] || 'Игра';
+                    sharedState.catalog.unshift({
+                        id: 'cat_' + Date.now() + '_' + idx,
+                        title,
+                        emoji: '🎲',
+                        players: parts[1] || '2–4',
+                        time: parts[2] || '60 мин',
+                        age: '10+',
+                        genre: parts[3] || 'Стратегия',
+                        complexity: 'Средняя',
+                        image: generateCoverSvg(title, '🎲'),
+                        description: 'Доступна для игр в зале клуба.'
+                    });
+                }
+            });
+
+            await persistSharedState();
+            closeModal();
+            showToast(`Добавлено позиций: ${lines.length}`);
+        };
+
+        // Корзина и оформление заказа
+        window.addToCart = function (id) {
+            const prod = sharedState.shop.find(p => p.id === id);
+            if (!prod || prod.stock <= 0) return;
+            const existing = cart.find(c => c.id === id);
+            if (existing) {
+                if (existing.qty < prod.stock) existing.qty++;
+            } else {
+                cart.push({ id, qty: 1 });
+            }
+            updateNavigation();
+            renderActiveTab();
+            showToast('Добавлено в корзину');
+        };
+
+        window.changeCartQty = function (id, delta) {
+            const prod = sharedState.shop.find(p => p.id === id);
+            const idx = cart.findIndex(c => c.id === id);
+            if (idx < 0) return;
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            else if (prod && cart[idx].qty > prod.stock) cart[idx].qty = prod.stock;
+            updateNavigation();
+            renderActiveTab();
+        };
+
+        window.openCartModal = function () {
+            const rows = cart.map(c => {
+                const p = sharedState.shop.find(x => x.id === c.id);
+                return p ? `<div class="flex justify-between text-xs font-extrabold"><span>${p.title} × ${c.qty}</span><span>${formatKZT(p.price * c.qty)}</span></div>` : '';
+            }).join('');
+            const total = cart.reduce((s, c) => {
+                const p = sharedState.shop.find(x => x.id === c.id);
+                return s + (p ? p.price * c.qty : 0);
+            }, 0);
+
+            openModal(`
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-black">Оформление заказа</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="pd-card-soft p-3 space-y-2">${rows}</div>
+                    <input type="text" id="orderPhone" placeholder="Ваш телефон для связи (+7...)" class="pd-input">
+                    <div class="flex justify-between items-center font-black">
+                        <span class="text-xs">Итого к оплате:</span>
+                        <span class="text-lg" style="color: var(--accent);">${formatKZT(total)}</span>
+                    </div>
+                    <button onclick="checkoutShopOrder()" class="w-full pd-btn-gold py-3 text-sm">Оформить заказ</button>
+                </div>
+            `);
+        };
+
+        window.checkoutShopOrder = async function () {
+            const phone = document.getElementById('orderPhone').value.trim() || 'Не указан';
+            let total = 0;
+            const summaryLines = [];
+
+            cart.forEach(c => {
+                const p = sharedState.shop.find(x => x.id === c.id);
+                if (p) {
+                    total += p.price * c.qty;
+                    p.stock = Math.max(0, p.stock - c.qty);
+                    summaryLines.push(`${p.title} × ${c.qty} (${formatKZT(p.price * c.qty)})`);
+                }
+            });
+
+            if (userProfile.hasCard) {
+                const bonusEarned = Math.round(total * (sharedState.bonusRules.cashbackPercent / 100));
+                userProfile.balance += bonusEarned;
+                userProfile.history.unshift({
+                    title: 'Кэшбэк за покупку в магазине',
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    delta: bonusEarned
+                });
+                await persistUserProfile();
+            }
+
+            await persistSharedState();
+            await notifyAdmin(
+                'Новый заказ в магазине!',
+                `🛍️ Покупатель: ${currentUser.name} ${currentUser.username}\n📞 Телефон: ${phone}\n📦 Товары:\n• ${summaryLines.join('\n• ')}\n💰 Сумма: ${formatKZT(total)}`
+            );
+
+            cart = [];
+            updateNavigation();
+            closeModal();
+            renderActiveTab();
+            showToast('Заказ оформлен! Администратор получил уведомление.');
+        };
+
+        // Карта лояльности и касса
+        window.issueLoyaltyCard = async function () {
+            const num = 'PD-' + Math.floor(100000 + Math.random() * 900000);
+            userProfile.hasCard = true;
+            userProfile.cardNumber = num;
+            userProfile.balance = sharedState.bonusRules.welcomeBonus;
+            userProfile.stamps = 0;
+            userProfile.freeGamesAvailable = 0;
+            userProfile.history.unshift({
+                title: 'Приветственный бонус за выпуск карты',
+                date: new Date().toLocaleDateString('ru-RU'),
+                delta: sharedState.bonusRules.welcomeBonus
+            });
+            await persistUserProfile();
+            showToast(`Карта ${num} выпущена!`);
+        };
+
+        window.openLinkPhysicalCardModal = function () {
+            openModal(`
+                <div class="space-y-3">
+                    <h3 class="text-lg font-black">Привязать пластиковую карту</h3>
+                    <input type="text" id="physCardInput" placeholder="Номер карты (например: PD-482910)" class="pd-input">
+                    <button onclick="linkPhysicalCard()" class="w-full pd-btn-primary py-3 text-sm">Привязать</button>
+                </div>
+            `);
+        };
+
+        window.linkPhysicalCard = async function () {
+            const code = document.getElementById('physCardInput').value.trim().toUpperCase();
+            if (!code) return;
+            userProfile.hasCard = true;
+            userProfile.cardNumber = code;
+            await persistUserProfile();
+            closeModal();
+            showToast('Карта привязана');
+        };
+
+        window.openQrZoomModal = function () {
+            openModal(`
+                <div class="text-center space-y-3 py-2">
+                    <h3 class="text-lg font-black">Карта гостя ${sharedState.club.name}</h3>
+                    <div class="w-56 h-56 mx-auto p-3 rounded-3xl bg-white border shadow-md">
+                        ${buildQrSvg(userProfile.cardNumber)}
+                    </div>
+                    <div class="text-base font-black tracking-wider">${userProfile.cardNumber}</div>
+                    <p class="text-xs" style="color: var(--text-muted);">Покажите код администратору для начисления штампов и бонусов</p>
+                </div>
+            `);
+        };
+
+        window.cashierAccrueFromCheck = async function () {
+            if (!userProfile.hasCard) {
+                showToast('Сначала оформите карту гостя', 'error');
+                return;
+            }
+            const amount = Number(document.getElementById('cashierCheckInput').value) || 0;
+            if (amount <= 0) return;
+            const bonus = Math.round(amount * (sharedState.bonusRules.cashbackPercent / 100));
+            userProfile.balance += bonus;
+            userProfile.history.unshift({
+                title: `Кэшбэк с чека ${formatKZT(amount)}`,
+                date: new Date().toLocaleDateString('ru-RU'),
+                delta: bonus
+            });
+            await persistUserProfile();
+            showToast(`Начислено +${formatKZT(bonus)}`);
+        };
+
+        window.cashierAddStamp = async function () {
+            if (!userProfile.hasCard) {
+                showToast('Сначала оформите карту гостя', 'error');
+                return;
+            }
+            const freeEvery = Number(sharedState.bonusRules.freeGameEvery) || 9;
+            userProfile.stamps = (userProfile.stamps || 0) + 1;
+
+            // Если собраны 8 штампов, 9-я игротека становится бесплатной!
+            if (userProfile.stamps % freeEvery === freeEvery - 1) {
+                userProfile.freeGamesAvailable = (userProfile.freeGamesAvailable || 0) + 1;
+                userProfile.history.unshift({
+                    title: `Открыта бесплатная ${freeEvery}-я игротека!`,
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    delta: 0,
+                    badge: '🎁 0 ₸'
+                });
+                showToast(`Собраны ${freeEvery - 1} штампов! Следующая ${freeEvery}-я игра — 0 ₸!`);
+            } else {
+                userProfile.history.unshift({
+                    title: 'Штамп за посещение игротеки',
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    delta: 0,
+                    badge: '+1 штамп'
+                });
+                showToast('Штамп за посещение добавлен');
+            }
+            await persistUserProfile();
+        };
+
+        window.cashierRedeemFreeGame = async function () {
+            if ((userProfile.freeGamesAvailable || 0) <= 0) {
+                showToast('Нет доступных бесплатных игр', 'error');
+                return;
+            }
+            userProfile.freeGamesAvailable -= 1;
+            userProfile.stamps += 1;
+            userProfile.history.unshift({
+                title: `Выдана бесплатная ${sharedState.bonusRules.freeGameEvery}-я игротека`,
+                date: new Date().toLocaleDateString('ru-RU'),
+                delta: 0,
+                badge: '🎁 0 ₸'
+            });
+            await persistUserProfile();
+            showToast('Бесплатная 9-я игра списана');
+        };
+
+        window.openImagePreview = function (src, title) {
+            openModal(`
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-base font-black">${title}</h3>
+                        <button onclick="closeModal()" class="p-1.5 rounded-xl pd-card-soft"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <img src="${src}" alt="${title}" class="w-full rounded-2xl object-contain max-h-[65vh]">
+                </div>
+            `);
+        };
+
+        // Навигация и фильтры
+        window.switchTab = function (tab) {
+            activeTab = tab;
+            updateNavigation();
+            renderActiveTab();
+        };
+        window.setEventsFilter = function (f) {
+            eventsFilter = f;
+            renderActiveTab();
+        };
+        window.setCatalogSearch = function (v) {
+            catalogSearch = v;
+            renderActiveTab();
+        };
+        window.setCatalogGenre = function (g) {
+            catalogGenre = g;
+            renderActiveTab();
+        };
+        window.setShopSearch = function (v) {
+            shopSearch = v;
+            renderActiveTab();
+        };
+        window.setShopSort = function (v) {
+            shopSort = v;
+            renderActiveTab();
+        };
+
+        function renderActiveTab() {
+            const container = document.getElementById('appContent');
+            if (!container) return;
+            if (activeTab === 'events') container.innerHTML = renderEventsTab();
+            else if (activeTab === 'catalog') container.innerHTML = renderCatalogTab();
+            else if (activeTab === 'shop') container.innerHTML = renderShopTab();
+            else if (activeTab === 'cabinet') container.innerHTML = renderCabinetTab();
+            lucide.createIcons();
+        }
+
+        function renderAll() {
+            applyTheme();
+            renderHeader();
+            updateNavigation();
+            renderActiveTab();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAll();
+            initCloudSync();
+        });
+    </script>
+</body>
+</html>
